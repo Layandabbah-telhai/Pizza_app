@@ -7,6 +7,9 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+let orders = [];
+let nextOrderId = 1;
+
 const menu = {
   pizzas: [
     { id: "margherita", name: "Margherita", price: 35 },
@@ -26,6 +29,81 @@ const menu = {
     { id: "extra_cheese", name: "Extra Cheese", price: 3.5 },
   ],
 };
+
+const validStatuses = ["new", "preparing", "ready", "delivered"];
+
+function findPizza(pizzaId) {
+  return menu.pizzas.find((pizza) => pizza.id === pizzaId);
+}
+
+function findSize(sizeId) {
+  return menu.sizes.find((size) => size.id === sizeId);
+}
+
+function findTopping(toppingId) {
+  return menu.toppings.find((topping) => topping.id === toppingId);
+}
+
+function validateOrderInput(body) {
+  if (!body.customerName || !body.phone || !body.deliveryAddress) {
+    return "Customer name, phone, and delivery address are required";
+  }
+
+  if (!Array.isArray(body.pizzas) || body.pizzas.length === 0) {
+    return "Order must contain at least one pizza";
+  }
+
+  for (const pizzaItem of body.pizzas) {
+    if (!pizzaItem.pizzaId || !findPizza(pizzaItem.pizzaId)) {
+      return "Invalid pizza id";
+    }
+
+    if (!pizzaItem.size || !findSize(pizzaItem.size)) {
+      return "Invalid pizza size";
+    }
+
+    if (!Array.isArray(pizzaItem.toppings)) {
+      return "Toppings must be an array";
+    }
+
+    if (pizzaItem.toppings.length > 3) {
+      return "A pizza cannot have more than three toppings";
+    }
+
+    for (const toppingId of pizzaItem.toppings) {
+      if (!findTopping(toppingId)) {
+        return "Invalid topping id";
+      }
+    }
+  }
+
+  return null;
+}
+
+function calculateOrderPrice(pizzas) {
+  let total = 0;
+
+  for (const pizzaItem of pizzas) {
+    const pizza = findPizza(pizzaItem.pizzaId);
+    const size = findSize(pizzaItem.size);
+
+    total += pizza.price;
+    total += size.price;
+
+    for (const toppingId of pizzaItem.toppings) {
+      const topping = findTopping(toppingId);
+      total += topping.price;
+    }
+  }
+
+  const deliveryFee = total > 100 ? 0 : 15;
+
+  return {
+    itemsPrice: total,
+    deliveryFee,
+    totalPrice: total + deliveryFee,
+  };
+}
 
 app.get("/api/menu", (req, res) => {
   return res.status(200).json(menu);
