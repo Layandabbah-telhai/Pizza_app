@@ -109,7 +109,9 @@ function buildOrderPizzas(pizzas) {
   return pizzas.map((pizzaItem) => {
     const pizza = findPizza(pizzaItem.pizzaId);
     const size = findSize(pizzaItem.size);
-    const toppings = pizzaItem.toppings.map((toppingId) => findTopping(toppingId));
+    const toppings = pizzaItem.toppings.map((toppingId) =>
+      findTopping(toppingId)
+    );
 
     return {
       pizzaId: pizza.id,
@@ -123,6 +125,13 @@ function buildOrderPizzas(pizzas) {
       })),
     };
   });
+}
+
+function isValidStatusTransition(currentStatus, nextStatus) {
+  const currentIndex = validStatuses.indexOf(currentStatus);
+  const nextIndex = validStatuses.indexOf(nextStatus);
+
+  return nextIndex === currentIndex + 1;
 }
 
 app.get("/api/menu", (req, res) => {
@@ -175,6 +184,30 @@ app.get("/api/orders/:id", (req, res) => {
     return res.status(404).json({ error: "Order not found" });
   }
 
+  return res.status(200).json(order);
+});
+
+app.patch("/api/orders/:id/status", (req, res) => {
+  const orderId = Number(req.params.id);
+  const order = orders.find((item) => item.orderId === orderId);
+
+  if (!order) {
+    return res.status(404).json({ error: "Order not found" });
+  }
+
+  const { status } = req.body;
+
+  if (!status || !validStatuses.includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  if (!isValidStatusTransition(order.status, status)) {
+    return res.status(409).json({
+      error: `Cannot change status from ${order.status} to ${status}`,
+    });
+  }
+
+  order.status = status;
   return res.status(200).json(order);
 });
 
