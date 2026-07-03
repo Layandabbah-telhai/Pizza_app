@@ -156,6 +156,28 @@ app.post("/api/orders", (req, res) => {
   return res.status(201).json(order);
 });
 
+app.get("/api/orders", (req, res) => {
+  const { status } = req.query;
+
+  if (!status) {
+    return res.status(200).json(orders);
+  }
+
+  const filteredOrders = orders.filter((order) => order.status === status);
+  return res.status(200).json(filteredOrders);
+});
+
+app.get("/api/orders/:id", (req, res) => {
+  const orderId = Number(req.params.id);
+  const order = orders.find((item) => item.orderId === orderId);
+
+  if (!order) {
+    return res.status(404).json({ error: "Order not found" });
+  }
+
+  return res.status(200).json(order);
+});
+
 app.listen(PORT, () => {
   console.log(`Pizza server is running on port ${PORT}`);
 });
