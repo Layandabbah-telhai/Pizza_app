@@ -105,8 +105,55 @@ function calculateOrderPrice(pizzas) {
   };
 }
 
+function buildOrderPizzas(pizzas) {
+  return pizzas.map((pizzaItem) => {
+    const pizza = findPizza(pizzaItem.pizzaId);
+    const size = findSize(pizzaItem.size);
+    const toppings = pizzaItem.toppings.map((toppingId) => findTopping(toppingId));
+
+    return {
+      pizzaId: pizza.id,
+      pizzaName: pizza.name,
+      size: size.id,
+      sizeName: size.name,
+      toppings: toppings.map((topping) => ({
+        id: topping.id,
+        name: topping.name,
+        price: topping.price,
+      })),
+    };
+  });
+}
+
 app.get("/api/menu", (req, res) => {
   return res.status(200).json(menu);
+});
+
+app.post("/api/orders", (req, res) => {
+  const validationError = validateOrderInput(req.body);
+
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
+
+  const price = calculateOrderPrice(req.body.pizzas);
+
+  const order = {
+    orderId: nextOrderId++,
+    customerName: req.body.customerName,
+    phone: req.body.phone,
+    deliveryAddress: req.body.deliveryAddress,
+    pizzas: buildOrderPizzas(req.body.pizzas),
+    itemsPrice: price.itemsPrice,
+    deliveryFee: price.deliveryFee,
+    totalPrice: price.totalPrice,
+    status: "new",
+    paymentStatus: "paid",
+    createdAt: new Date().toISOString(),
+  };
+
+  orders.push(order);
+  return res.status(201).json(order);
 });
 
 app.listen(PORT, () => {
