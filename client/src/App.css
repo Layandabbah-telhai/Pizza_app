@@ -24,6 +24,16 @@ h1::before {
   content: "🍕 ";
 }
 
+h2 {
+  text-align: center;
+  color: #8b1e13;
+}
+
+h3 {
+  color: #b42318;
+  text-align: center;
+}
+
 section {
   margin-top: 28px;
 }
@@ -31,18 +41,81 @@ section {
 .box {
   background: #ffffff;
   border: 2px solid #f4c26b;
-  padding: 18px;
-  margin: 16px 0;
-  border-radius: 16px;
+  padding: 22px;
+  margin: 18px 0;
+  border-radius: 18px;
   box-shadow: 0 4px 12px rgba(139, 69, 19, 0.12);
 }
 
-.box h3 {
-  color: #b42318;
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  max-width: 650px;
+  margin: 0 auto;
 }
 
-li {
-  margin: 6px 0;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+}
+
+select,
+input {
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid #c9a46a;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.toppings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  max-width: 700px;
+  margin: 15px auto;
+}
+
+.checkbox {
+  background: #fff7ec;
+  border: 1px solid #f4c26b;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+button {
+  background: #d62828;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+button:hover {
+  background: #a61e1e;
+}
+
+.center-button {
+  display: block;
+  margin: 16px auto 0;
+}
+
+.cart-list {
+  list-style: none;
+  padding: 0;
+}
+
+.cart-item {
+  background: #fff7ec;
+  border: 1px solid #f4c26b;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 10px 0;
 }
 
 .error {
