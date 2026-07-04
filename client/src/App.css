@@ -126,3 +126,10 @@ button:hover {
   color: #900;
   border-radius: 8px;
 }
+.order-card {
+  background: #fff7ec;
+  border: 1px solid #f4c26b;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 12px 0;
+}

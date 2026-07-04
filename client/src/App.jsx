@@ -17,10 +17,13 @@ function App() {
   const [confirmation, setConfirmation] = useState(null);
   const [trackId, setTrackId] = useState("");
   const [trackedOrder, setTrackedOrder] = useState(null);
+
+  const [employeeOrders, setEmployeeOrders] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     fetchMenu();
+    fetchEmployeeOrders();
   }, []);
 
   async function fetchMenu() {
@@ -31,6 +34,16 @@ function App() {
     } catch (err) {
       setError("Cannot connect to server.");
     }
+  }
+
+  async function fetchEmployeeOrders() {
+    const newResponse = await fetch(`${API_URL}/api/orders?status=new`);
+    const preparingResponse = await fetch(`${API_URL}/api/orders?status=preparing`);
+
+    const newOrders = await newResponse.json();
+    const preparingOrders = await preparingResponse.json();
+
+    setEmployeeOrders([...newOrders, ...preparingOrders]);
   }
 
   function handleToppingChange(toppingId) {
@@ -154,6 +167,7 @@ function App() {
     setCustomerName("");
     setPhone("");
     setDeliveryAddress("");
+    await fetchEmployeeOrders();
   }
 
   async function trackOrder() {
@@ -169,6 +183,41 @@ function App() {
     }
 
     setTrackedOrder(data);
+  }
+
+  async function updateOrderStatus(orderId, status) {
+    setError("");
+
+    const response = await fetch(`${API_URL}/api/orders/${orderId}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setError(data.error || "Failed to update status.");
+      return;
+    }
+
+    await fetchEmployeeOrders();
+  }
+
+  function renderOrderItems(order) {
+    return order.pizzas.map((pizza, index) => (
+      <li key={index}>
+        {pizza.pizzaName} - {pizza.sizeName}
+        {pizza.toppings.length > 0 && (
+          <span>
+            {" "}
+            | Toppings: {pizza.toppings.map((topping) => topping.name).join(", ")}
+          </span>
+        )}
+      </li>
+    ));
   }
 
   if (!menu) {
@@ -354,6 +403,40 @@ function App() {
             <p>
               Order #{trackedOrder.orderId} status: {trackedOrder.status}
             </p>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h2>Restaurant Employee Screen</h2>
+
+        <button onClick={fetchEmployeeOrders}>Refresh Employee Orders</button>
+
+        <div data-testid="employee-orders" className="box">
+          {employeeOrders.length === 0 ? (
+            <p>No active orders.</p>
+          ) : (
+            employeeOrders.map((order) => (
+              <div key={order.orderId} className="order-card">
+                <h4>Order #{order.orderId}</h4>
+                <p>Customer: {order.customerName}</p>
+                <p>Total: ₪{order.totalPrice}</p>
+                <p>Status: {order.status}</p>
+                <ul>{renderOrderItems(order)}</ul>
+
+                {order.status === "new" && (
+                  <button onClick={() => updateOrderStatus(order.orderId, "preparing")}>
+                    Move to Preparing
+                  </button>
+                )}
+
+                {order.status === "preparing" && (
+                  <button onClick={() => updateOrderStatus(order.orderId, "ready")}>
+                    Move to Ready
+                  </button>
+                )}
+              </div>
+            ))
           )}
         </div>
       </section>
