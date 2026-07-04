@@ -133,3 +133,17 @@ button:hover {
   padding: 14px;
   margin: 12px 0;
 }
+.navbar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.navbar button {
+  background: #f77f00;
+}
+
+.navbar button.active {
+  background: #d62828;
+}
