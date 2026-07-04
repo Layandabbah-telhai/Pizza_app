@@ -21,11 +21,13 @@ function App() {
   const [trackedOrder, setTrackedOrder] = useState(null);
 
   const [employeeOrders, setEmployeeOrders] = useState([]);
+  const [deliveryOrders, setDeliveryOrders] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     fetchMenu();
     fetchEmployeeOrders();
+    fetchDeliveryOrders();
   }, []);
 
   async function changeScreen(screen) {
@@ -34,6 +36,10 @@ function App() {
 
     if (screen === "employee") {
       await fetchEmployeeOrders();
+    }
+
+    if (screen === "delivery") {
+      await fetchDeliveryOrders();
     }
   }
 
@@ -55,6 +61,12 @@ function App() {
     const preparingOrders = await preparingResponse.json();
 
     setEmployeeOrders([...newOrders, ...preparingOrders]);
+  }
+
+  async function fetchDeliveryOrders() {
+    const response = await fetch(`${API_URL}/api/orders?status=ready`);
+    const readyOrders = await response.json();
+    setDeliveryOrders(readyOrders);
   }
 
   function handleToppingChange(toppingId) {
@@ -179,6 +191,7 @@ function App() {
     setPhone("");
     setDeliveryAddress("");
     await fetchEmployeeOrders();
+    await fetchDeliveryOrders();
   }
 
   async function trackOrder() {
@@ -215,6 +228,7 @@ function App() {
     }
 
     await fetchEmployeeOrders();
+    await fetchDeliveryOrders();
   }
 
   function renderOrderItems(order) {
@@ -254,6 +268,13 @@ function App() {
           onClick={() => changeScreen("employee")}
         >
           Restaurant Employee
+        </button>
+
+        <button
+          className={currentScreen === "delivery" ? "active" : ""}
+          onClick={() => changeScreen("delivery")}
+        >
+          Delivery Person
         </button>
       </nav>
 
@@ -377,7 +398,10 @@ function App() {
             <p>Items price: ₪{estimatedPrice.itemsPrice}</p>
             <p>Delivery fee: ₪{estimatedPrice.deliveryFee}</p>
             <p>Estimated total price: ₪{estimatedPrice.totalPrice}</p>
-            <p>The final price is calculated again by the server after order submission.</p>
+            <p>
+              The final price is calculated again by the server after order
+              submission.
+            </p>
           </div>
 
           <div className="box">
@@ -455,16 +479,54 @@ function App() {
                   <ul>{renderOrderItems(order)}</ul>
 
                   {order.status === "new" && (
-                    <button onClick={() => updateOrderStatus(order.orderId, "preparing")}>
+                    <button
+                      onClick={() =>
+                        updateOrderStatus(order.orderId, "preparing")
+                      }
+                    >
                       Move to Preparing
                     </button>
                   )}
 
                   {order.status === "preparing" && (
-                    <button onClick={() => updateOrderStatus(order.orderId, "ready")}>
+                    <button
+                      onClick={() => updateOrderStatus(order.orderId, "ready")}
+                    >
                       Move to Ready
                     </button>
                   )}
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      )}
+
+      {currentScreen === "delivery" && (
+        <section>
+          <h2>Delivery Person Screen</h2>
+
+          <button onClick={fetchDeliveryOrders}>Refresh Delivery Orders</button>
+
+          <div data-testid="delivery-orders" className="box">
+            {deliveryOrders.length === 0 ? (
+              <p>No orders ready for delivery.</p>
+            ) : (
+              deliveryOrders.map((order) => (
+                <div key={order.orderId} className="order-card">
+                  <h4>Order #{order.orderId}</h4>
+                  <p>Customer: {order.customerName}</p>
+                  <p>Phone: {order.phone}</p>
+                  <p>Address: {order.deliveryAddress}</p>
+                  <p>Status: {order.status}</p>
+
+                  <button
+                    onClick={() =>
+                      updateOrderStatus(order.orderId, "delivered")
+                    }
+                  >
+                    Mark as Delivered
+                  </button>
                 </div>
               ))
             )}
